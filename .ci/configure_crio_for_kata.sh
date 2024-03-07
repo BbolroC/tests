@@ -16,6 +16,26 @@ crio_config_dir="/etc/crio/crio.conf.d"
 
 echo "Configure runtimes map for RuntimeClass feature with drop-in configs"
 
+sudo tee "$crio_config_dir/00-default-capabilities" > /dev/null <<EOF
+[crio]
+storage_option = [
+    "overlay.skip_mount_home=true",
+]
+[crio.runtime]
+default_capabilities = [
+       "CHOWN",
+       "DAC_OVERRIDE",
+       "FSETID",
+       "FOWNER",
+       "SETGID",
+       "SETUID",
+       "SETPCAP",
+       "NET_BIND_SERVICE",
+       "KILL",
+       "SYS_CHROOT",
+]
+EOF
+
 sudo tee "$crio_config_dir/99-runtimes" > /dev/null <<EOF
 [crio.runtime.runtimes.kata]
 runtime_path = "/usr/local/bin/containerd-shim-kata-v2"

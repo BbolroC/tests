@@ -36,16 +36,15 @@ export CI_JOB="EXTERNAL_CRIO"
 export INSTALL_KATA="yes"
 export GO111MODULE=auto
 
-latest_release="1.24"
+latest_release="1.29"
 
 sudo bash -c "cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl="https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
 enabled=1
 gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
 EOF"
 
 pr_number="${PULL_NUMBER}"
@@ -93,7 +92,7 @@ echo "Testing PR number ${pr_number}."
 
 # Clone the tests repository
 mkdir -p $(dirname "${tests_repo_dir}")
-[ -d "${tests_repo_dir}" ] || git clone "https://${tests_repo}.git" "${tests_repo_dir}"
+[ -d "${tests_repo_dir}" ] || git clone -b crio-e2e-s390x "https://github.com/BbolroC/tests.git" "${tests_repo_dir}"
 source ${tests_repo_dir}/.ci/ci_job_flags.sh
 
 # Clone the kata-containers repository
@@ -103,6 +102,7 @@ mkdir -p $(dirname "${katacontainers_repo_dir}")
 # Clone the crio repository
 mkdir -p $(dirname "${crio_repo_dir}")
 [ -d "${crio_repo_dir}" ] || git clone "https://${crio_repo}.git" "${crio_repo_dir}"
+pushd "${crio_repo_dir}" && git apply ${HOME}/script/s390x_crio_e2e_test.patch && popd
 
 if [ "${pr_number}" != "NONE" ]; then
 	# Checkout to the PR commit and rebase with main
@@ -122,17 +122,15 @@ cd "${katacontainers_repo_dir}"
 ${GOPATH}/src/${tests_repo}/.ci/install_yq.sh
 
 # CRI-O switched to using go 1.18+
-golang_version="1.18.1"
+golang_version="1.21.4"
 yq w -i versions.yaml languages.golang.meta.newest-version "${golang_version}"
 
 critools_version="${branch_release_number}.0"
-[ ${critools_version} == "1.24.0" ] && critools_version="1.24.2"
 echo "Using critools ${critools_version}"
 yq w -i versions.yaml externals.critools.version "${critools_version}"
 yq r versions.yaml externals.critools.version
 
-latest_kubernetes_from_repo=`LC_ALL=C sudo dnf -y repository-packages kubernetes info --available kubelet-${branch_release_number}* | grep Version | cut -d':' -f 2 | xargs`
-kubernetes_version="${latest_kubernetes_from_repo}-00"
+kubernetes_version="1.29.0"
 echo "Using kubernetes ${kubernetes_version}"
 yq w -i versions.yaml externals.kubernetes.version "${kubernetes_version}"
 yq r versions.yaml externals.kubernetes.version

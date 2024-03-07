@@ -37,15 +37,14 @@ elif [[ "$ID" =~ ^(alinux|centos|fedora|rhel)$ ]]; then
 		sudo -E yum autoremove kubelet -y
 	fi
 	url="https://packages.cloud.google.com/yum/repos/kubernetes-el7-${ARCH}"
-	echo "Install ${url} for ${ARCH}"
+	echo "Install kubernetes for ${ARCH}"
 	sudo bash -c "cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 	[kubernetes]
 	name=Kubernetes
-	baseurl=${url}
+	baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
 	enabled=1
 	gpgcheck=1
-	repo_gpgcheck=1
-	gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+	gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
 EOF"
 
 	chronic sudo -E sed -i 's/^[ \t]*//' /etc/yum.repos.d/kubernetes.repo
