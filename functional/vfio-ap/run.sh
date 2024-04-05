@@ -24,7 +24,7 @@ test_image_name="localhost:${registry_port}/vfio-ap-test:latest"
 
 test_category="[kata][vfio-ap][containerd]"
 
-trap cleanup EXIT
+#trap cleanup EXIT
 
 # Check if the given function exists.
 function_exists() {
@@ -204,7 +204,7 @@ run_tests() {
 
 main() {
     validate_env
-    cleanup
+    #cleanup
     build_test_image
     create_mediated_device
     run_tests
